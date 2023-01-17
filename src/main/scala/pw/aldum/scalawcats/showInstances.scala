@@ -13,13 +13,13 @@ given Show[Date] =
   //     s"${date.getTime}ms since the epoch."
 
 given Show[Cat] =
-  Show.show((cat: Cat) => {
+  Show.show((cat: Cat) =>
     val Cat(name, age, color) = cat
     val n = name.show
     val a = age.show
     val c = color.show
     s"$n is a $a year-old $c cat."
-  })
+  )
   // new Show[Cat]:
   //   def show(cat: Cat): String =
   //     val Cat(name, age, color) = cat
