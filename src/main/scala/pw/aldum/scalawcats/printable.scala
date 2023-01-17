@@ -17,3 +17,11 @@ object Printable:
     summon[Printable[A]].format(a)
   def print[A: Printable](a: A): Unit =
     println(format(a))
+
+object PrintableSyntax:
+  implicit class PrintableOps[A](a: A):
+    def format(using p: Printable[A]): String =
+      p.format(a)
+
+    def print(using p: Printable[A]) : Unit =
+      println(a.format)
