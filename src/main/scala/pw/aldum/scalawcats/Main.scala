@@ -7,6 +7,6 @@ package scalawcats
   val hello = "hello world"
   val x = 1
   println("─" * 100)
-  println(summon[Printable[String]].format(hello))
-  println(summon[Printable[Int]].format(x))
+  println(Printable.format(hello))
+  Printable.print(x)
   println("─" * 100)

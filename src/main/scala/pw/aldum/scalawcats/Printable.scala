@@ -11,3 +11,9 @@ object PrintableInstances:
 
   given Printable[Int] with
     def format(i: Int): String = i.toString
+
+object Printable:
+  def format[A: Printable](a: A): String =
+    summon[Printable[A]].format(a)
+  def print[A: Printable](a: A): Unit =
+    println(format(a))
