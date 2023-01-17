@@ -4,17 +4,13 @@ package scalawcats
 import cats.Eq
 import cats.syntax.eq.*
 
-import java.util.Date
-
 @main def Main(args: String*): Unit =
-  val fluffy = Cat("Fluffy", 3, "black")
-  val x = new Date() // now
-  Thread.sleep(1000)
-  val y = new Date() // a bit later than now
+  val cat1 = Cat("Garfield",   38, "orange and black")
+  val cat2 = Cat("Heathcliff", 33, "orange and black")
+  val optionCat1 = Option(cat1)
+  val optionCat2 = Option.empty[Cat]
 
   println("─" * 100)
-  println(fluffy === fluffy)
-  println(x)
-  println(y)
-  println(x === y)
+  println(cat1 === cat2)
+  println(optionCat1 === optionCat2)
   println("─" * 100)
