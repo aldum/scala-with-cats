@@ -3,16 +3,16 @@ package scalawcats
 
 import cats.Eq
 import cats.syntax.eq.*
+import cats.syntax.option.*
 
 import java.util.Date
 
 @main def Main(args: String*): Unit =
   val fluffy = Cat("Fluffy", 3, "black")
 
-  val eqInt = Eq[Int]
   println("─" * 100)
-  println(eqInt.eqv(123, 123))
-  println(eqInt.eqv(123, 120))
-  println(120 === 123)
-  // println(120 === "123") // Found: ("123" : String)  |  Required: Int
+  // println(Some(120) == 120) // Values of types Some[Int] and Int cannot be compared with == or !=
+  // println(Some(120) === 120) // value === is not a member of Some[Int]
+  // println(120 === Some(120)) // Found: Some[Int] | Required: Int
+  println(1.some === none[Int])
   println("─" * 100)
