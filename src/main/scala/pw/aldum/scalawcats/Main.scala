@@ -5,16 +5,14 @@ import cats.Eq
 import cats.syntax.eq.*
 
 @main def Main(args: String*): Unit =
-  val orEmpty  = BoolOrMonoid.empty
-  val orC      = BoolOrMonoid.combine
-  val andEmpty = BoolAndMonoid.empty
-  val andC     = BoolAndMonoid.combine
-
+  object intSetM extends SetUnionMonoid[Int]
+  val sue = intSetM.empty
+  val set1 = Set(1, 2, 3)
+  val set2 = Set(3, 5)
+  val set3 = Set(4, 10)
+  val app = intSetM.combine
   println("─" * 100)
-  println(orC(true, orEmpty) == true && orC(orEmpty, true) == true )
-  println(orC(false, orEmpty) == false && orC(orEmpty, false) == false )
-
-  println(andC(true, andEmpty) == true && andC(andEmpty, true) == true )
-  println(andC(false, andEmpty) == false && andC(andEmpty, false) == false )
-
+  println(app(set1, sue))
+  println(app(sue, set1))
+  println(app(set1, app(set2, set3)) == app(app(set1, set2), set3))
   println("─" * 100)

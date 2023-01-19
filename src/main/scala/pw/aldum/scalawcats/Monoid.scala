@@ -19,3 +19,8 @@ object BoolAndMonoid extends Monoid[Boolean]:
 object BoolOrMonoid extends Monoid[Boolean]:
   def combine(x: Boolean, y: Boolean): Boolean = x || y
   def empty: Boolean = false
+
+// What monoids and semigroups are there for sets?
+trait SetUnionMonoid[A] extends Monoid[Set[A]]:
+  def combine(x: Set[A], y: Set[A]): Set[A] = x union y
+  def empty: Set[A] = Set.empty[A]
