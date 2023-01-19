@@ -5,12 +5,16 @@ import cats.Eq
 import cats.syntax.eq.*
 
 @main def Main(args: String*): Unit =
-  val cat1 = Cat("Garfield",   38, "orange and black")
-  val cat2 = Cat("Heathcliff", 33, "orange and black")
-  val optionCat1 = Option(cat1)
-  val optionCat2 = Option.empty[Cat]
+  val orEmpty  = BoolOrMonoid.empty
+  val orC      = BoolOrMonoid.combine
+  val andEmpty = BoolAndMonoid.empty
+  val andC     = BoolAndMonoid.combine
 
   println("─" * 100)
-  println(cat1 === cat2)
-  println(optionCat1 === optionCat2)
+  println(orC(true, orEmpty) == true && orC(orEmpty, true) == true )
+  println(orC(false, orEmpty) == false && orC(orEmpty, false) == false )
+
+  println(andC(true, andEmpty) == true && andC(andEmpty, true) == true )
+  println(andC(false, andEmpty) == false && andC(andEmpty, false) == false )
+
   println("─" * 100)
