@@ -5,6 +5,10 @@ import cats.Eq
 import cats.syntax.eq.*
 
 @main def Main(args: String*): Unit =
-  println("─" * 100)
-  println(`SuperAdder v3.5a-32`.add(List(1,2,3,4)))
-  println("─" * 100)
+  val x = 75
+  val o1 = Order(10.5, 2)
+  val o2 = Order(65, 1)
+
+  println("─" * x)
+  println(`SuperAdder v3.5a-32`.combine(List(o1,o2)))
+  println("─" * x)

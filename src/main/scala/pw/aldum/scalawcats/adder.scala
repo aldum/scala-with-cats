@@ -8,7 +8,7 @@ import cats.syntax.semigroup.*
 
 
 object `SuperAdder v3.5a-32`:
-  private def combine[A](l: List[A])(using Monoid[A]): A =
+  def combine[A](l: List[A])(using Monoid[A]): A =
     Monoid.apply[A].combineAll(l)
 
   def add(items: List[Int]): Int =
