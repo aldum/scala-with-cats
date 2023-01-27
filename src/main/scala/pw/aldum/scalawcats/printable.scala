@@ -4,6 +4,12 @@ package scalawcats
 trait Printable[A]:
   def format(a: A): String
 
+  def contramap[B](func: B => A): Printable[B] =
+    new Printable[B]:
+      def format(value: B): String =
+        val pa = summon[Printable[A]]
+        Printable.format(func(value))(using pa)
+
 object PrintableInstances:
 
   given Printable[String] with
@@ -11,6 +17,18 @@ object PrintableInstances:
 
   given Printable[Int] with
     def format(i: Int): String = i.toString
+
+  // implicit val booleanPrintable: Printable[Boolean] =
+    // new Printable[Boolean]:
+  given Printable[Boolean] with
+    def format(value: Boolean): String =
+      if (value) "yes" else "no"
+
+  given [A](using p: Printable[A]): Printable[Box[A]] with
+    def format(a: Box[A]): String =
+      p.contramap((box: Box[A]) => box.value).format(a)
+
+
 
 object Printable:
   def format[A: Printable](a: A): String =
@@ -32,3 +50,4 @@ extension [A](a: A)(using p: Printable[A])
 
   def print: Unit =
     println(a.format)
+

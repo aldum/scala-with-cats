@@ -8,16 +8,10 @@ import cats.instances.function.* // for Functor
 import cats.syntax.functor.*     // for map
 
 @main def Main(args: String*): Unit =
-  import Tree.*
-  import scalawcats.given
+  import scalawcats.PrintableInstances.given
   val x = 75
 
-  val t = Branch(
-      Branch(Leaf(2)
-          , Branch(Leaf(3), Leaf(4)) )
-      , Leaf(5)
-    )
-
   println("─" * x)
-  println(t.map(_ * 2))
+  println(format(Box("hello world")))
+  println(format(Box(true)))
   println("─" * x)
