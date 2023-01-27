@@ -4,11 +4,10 @@ package scalawcats
 trait Printable[A]:
   def format(a: A): String
 
-  def contramap[B](func: B => A): Printable[B] =
+  def contramap[B](func: B => A)(using Printable[A]): Printable[B] =
     new Printable[B]:
       def format(value: B): String =
-        val pa = summon[Printable[A]]
-        Printable.format(func(value))(using pa)
+        Printable.format(func(value))
 
 object PrintableInstances:
 
