@@ -23,7 +23,7 @@ object PrintableSyntax:
     def format(using p: Printable[A]): String =
       p.format(a)
 
-    def print(using p: Printable[A]) : Unit =
+    def print(using Printable[A]) : Unit =
       println(a.format)
 
 extension [A](a: A)(using p: Printable[A])
