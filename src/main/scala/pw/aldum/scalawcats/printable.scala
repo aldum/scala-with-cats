@@ -1,13 +1,15 @@
 package pw.aldum
 package scalawcats
 
-trait Printable[A]:
+trait Printable[A] { self =>
   def format(a: A): String
 
   def contramap[B](func: B => A)(using Printable[A]): Printable[B] =
     new Printable[B]:
       def format(value: B): String =
-        Printable.format(func(value))
+        self.format(func(value))
+}
+
 
 object PrintableInstances:
 
