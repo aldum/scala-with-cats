@@ -1,7 +1,7 @@
 import Dependencies._
 
 ThisBuild / organization := "pw.aldum"
-ThisBuild / scalaVersion := "3.2.1"
+ThisBuild / scalaVersion := "3.2.2"
 
 ThisBuild / scalacOptions ++=
   Seq(

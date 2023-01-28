@@ -10,4 +10,4 @@ def validateAdult[F[_]]
       (age: Int)(using me: MonadError[F, Throwable]): F[Int] =
   age.pure.ensure(new IllegalArgumentException("underage"))(_ >= 18)
   // if(age >= 18) age.pure[F]
-  // else new IllegalArgumentException("Age must be greater than or equal to 18").raiseError[F, Int]
+  // else new IllegalArgumentException("").raiseError[F, Int]
