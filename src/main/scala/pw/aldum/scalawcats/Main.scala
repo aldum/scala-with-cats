@@ -1,26 +1,26 @@
 package pw.aldum
 package scalawcats
 
-import cats.data.Writer
-
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.concurrent.duration.*
-import cats.syntax.applicative.* // for pure
-import cats.syntax.writer.*
-
-
-given ExecutionContext = ExecutionContext.global
-
 @main def Main(args: String*): Unit =
   import scalawcats.given
   val x = 75
 
-  Await.result(Future.sequence(Vector(
-    Future(factorial(5)),
-    Future(factorial(5))
-  )).map(_.map(_.written)), 5.seconds)
+  val users = Map(
+    1 -> "dade",
+    2 -> "kate",
+    3 -> "margo"
+  )
+
+  val passwords = Map(
+    "dade"  -> "zerocool",
+    "kate"  -> "acidburn",
+    "margo" -> "secret"
+  )
+
+  val db = Db(users, passwords)
+
 
   println("─" * x)
-  println(factorial(5))
-  println(factorial(6))
+  println(checkLogin(1, "zerocool").run(db))
+  println(checkLogin(4, "davinci").run(db))
   println("─" * x)
