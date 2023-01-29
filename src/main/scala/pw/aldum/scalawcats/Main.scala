@@ -18,7 +18,7 @@ given ExecutionContext = ExecutionContext.global
   Await.result(Future.sequence(Vector(
     Future(factorial(5)),
     Future(factorial(5))
-  )), 5.seconds)
+  )).map(_.map(_.written)), 5.seconds)
 
   println("─" * x)
   println(factorial(5))
