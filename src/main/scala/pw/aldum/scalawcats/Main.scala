@@ -1,16 +1,30 @@
 package pw.aldum
 package scalawcats
 
-import scala.util.Try
+import cats.Eval
+import cats.syntax.option.*
+
+import scala.util.Random
 
 @main def Main(args: String*): Unit =
   import scalawcats.given
   val x = 75
 
-  println("─" * x)
-  println(validateAdult[Try](18)) // Try[Int] = Success(18)
-  println(validateAdult[Try](8)) // Try[Int] = Failure(IllegalArgumentException)
+  def sum(l: List[Int]) = foldRightEval(l, 0){
+    (i, accE) =>
+      accE.map(_ + i)
+  }
+  def max(l: List[Int]) = foldRightEval(l, none[Int]){
+    (i, accE) =>
+      accE.map{
+        case None => Some(i)
+        case Some(m) => Some( Math.max(i, m) )
+      }
+  }
 
-  type ExceptionOr[A] = Either[Throwable, A]
-  println(validateAdult[ExceptionOr](-1)) // ExceptionOr[Int] = Left(IllegalArgumentException)
+  println("─" * x)
+  println(sum(List(1,2,3)).value)
+  println(sum((1 to 1500).toList).value)
+  println(max(List(10,20,4)).value)
+  println(max(List.fill(10000)(Random.nextInt())).value)
   println("─" * x)
