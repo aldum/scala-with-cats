@@ -10,3 +10,10 @@ package pw.aldum.scalawcats
 enum Tree[+A]:
   case Branch(left: Tree[A], right: Tree[A])
   case Leaf(value: A)
+
+
+def branch[A](left: Tree[A], right: Tree[A]): Tree[A] =
+  Tree.Branch(left, right)
+
+def leaf[A](value: A): Tree[A] =
+  Tree.Leaf(value)
