@@ -70,3 +70,7 @@ object RPN:
     input.foldLeft(State.pure(0)){ (a, b) =>
       a.flatMap(_ => evalOne(b))
     }
+
+  def evalInput(input: String): Int =
+    val in = input.split(" ").nn.map(_.nn).toList
+    evalAll(in).runA(Nil).value
