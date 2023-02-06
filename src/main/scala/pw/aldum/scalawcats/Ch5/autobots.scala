@@ -24,3 +24,10 @@ def getPowerLevel(autobot: String): Response[Int] =
       case Some(v) => Right(v)
       case None    => Left("not found")
   ))
+
+def canSpecialMove(ally1: String, ally2: String): Response[Boolean] =
+  val power = for
+    p1 <- getPowerLevel(ally1)
+    p2 <- getPowerLevel(ally2)
+  yield p1 + p2
+  power.bimap(e => s"power error: $e", _ >= 15)

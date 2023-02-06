@@ -5,15 +5,20 @@ import cats.syntax.flatMap.*
 import cats.syntax.all.toFunctorOps
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Await
 
 @main def Main(args: String*): Unit =
   import scalawcats.given
   val x = 75
 
   println("─" * x)
-  val f1 = getPowerLevel("asdf").value
-  val f2 = getPowerLevel("Jazz").value
-  println(f1.value)
-  println(f2.value)
+
+  val f1 = canSpecialMove("asdf", "Jazz")
+  val f2 = canSpecialMove("Jazz", "Bumblebee")
+  val f3 = canSpecialMove("Hot Rod", "Bumblebee")
+
+  println(f1.value.value)
+  println(f2.value.value)
+  println(f3.value.value)
 
   println("─" * x)
