@@ -1,7 +1,8 @@
 package pw.aldum
 package scalawcats
 
-import cats.Foldable
+import cats.Monoid
+
 import math.Numeric.Implicits.infixNumericOps
 
 // Prove this to yourself by implementing substitutes for List's map, flatMap,
@@ -26,3 +27,6 @@ extension [A](l: List[A])(using n: Numeric[A])
     )
 
   def foldSum = l.foldRight(n.zero)(_ + _)
+
+extension [A](l: List[A])(using m: Monoid[A])
+  def monoidSum = l.foldRight(m.empty)(m.combine)
