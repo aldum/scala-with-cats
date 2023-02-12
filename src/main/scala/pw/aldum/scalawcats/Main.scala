@@ -2,6 +2,9 @@ package pw.aldum
 package scalawcats
 
 import cats.instances.int.*
+import cats.Foldable
+
+import scala.language.postfixOps
 
 @main def Main(args: String*): Unit =
   import scalawcats.given
@@ -10,10 +13,11 @@ import cats.instances.int.*
   println("─" * x)
 
   val l = List(1, 2, 3)
-  println(l.foldMap(_ + 2))
-  println(l.foldFlatMap((x) => List(x * 2)))
-  println(l.foldFilter(_ % 2 == 0))
-  println(l.foldSum)
-  println(l.monoidSum)
+
+  println(Foldable[List].foldLeft(l, 0)(_ + _))
+  println(Foldable[List].foldMap(l)(_.toString))
+
+  val ints = List(Vector(1, 2, 3), Vector(4, 5, 6))
+  println( (Foldable[List] `compose` Foldable[Vector]).combineAll(ints) )
 
   println("─" * x)
