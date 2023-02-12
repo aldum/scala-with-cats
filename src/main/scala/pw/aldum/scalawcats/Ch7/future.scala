@@ -15,7 +15,7 @@ def getUptime(hostname: String): Future[Int] =
   Future(hostname.length * 60) // just for demonstration
 
 def allUptimes: Future[List[Int]] =
-  Future.traverse(hostnames)(getUptime)
+  listTraverse(hostnames)(getUptime)
   // hostnames.foldLeft(Future(List.empty[Int])) (
   //   (accum, host) =>
   //     val uptime = getUptime(host)
