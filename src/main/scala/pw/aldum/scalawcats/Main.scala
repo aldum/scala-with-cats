@@ -11,8 +11,8 @@ import scala.concurrent.duration.*
   val x = 75
 
   val v = Vector.tabulate(100)(identity)
-  object reducer extends Reducable[Int, Int]
-  object stringReducer extends Reducable[Int, String]
+  object reducer extends Reducible[Int, Int]
+  object stringReducer extends Reducible[Int, String]
 
   def fPrintln[A](f: Future[A]): Unit =
     println(Await.result(f, 1.second))

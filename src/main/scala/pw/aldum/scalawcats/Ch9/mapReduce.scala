@@ -2,32 +2,38 @@ package pw.aldum
 package scalawcats
 
 import cats.Monoid
-import cats.Foldable
+import cats.Applicative
+import cats.Traverse
+import cats.syntax.functor.*      // for map
+import cats.syntax.foldable.*
+import cats.syntax.traverse.*
 import cats.syntax.semigroup.*
+import cats.syntax.applicative.*      // for pure
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 
-trait Reducable[A, B: Monoid]:
-  lazy val parN = Runtime.getRuntime.nn.availableProcessors
+lazy val parN = Runtime.getRuntime.nn.availableProcessors
 
-  private def fold(seq: Vector[B]): B =
+trait Reducible[A, B: Monoid]:
+
+  private def fold(seq: Iterable[B]): B =
     val m = summon[Monoid[B]]
     seq.foldLeft(m.empty)(m.combine)
 
 
-  def foldMap(seq: Vector[A])(f: A => B): B =
+  def foldMap(seq: Iterable[A])(f: A => B): B =
     fold(seq.map(f))
 
   def parallelFoldMap
-    (values: Vector[A])
-    (f: A => B)
-    (using ExecutionContext): Future[B] =
-      val work = values.grouped(values.length / parN)
+      (values: Iterable[A])
+      (f: A => B)
+      (using ExecutionContext): Future[B] =
+    val work = values.grouped(values.size / parN)
 
-      Future.traverse(work)(v => Future(
-        foldMap(v)(f)
-      )).map(r => fold(r.toVector))
+    Future.traverse(work)(v => Future(
+      foldMap(v)(f)
+    )).map(r => fold(r.toVector))
 
   def parallelFoldMapBook
       (values: Vector[A])
@@ -52,3 +58,5 @@ trait Reducable[A, B: Monoid]:
     Future.sequence(futures) map { iterable =>
       iterable.foldLeft(Monoid[B].empty)(_ |+| _)
     }
+
+end Reducible
