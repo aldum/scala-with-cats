@@ -18,18 +18,6 @@ import cats.syntax.traverse.*
   import scalawcats.given
   val x = 75
 
-  val totalUptime: Future[List[Int]] =
-    Traverse[List].traverse(hostnames)(getUptime)
-
-  val numbers = List(Future(1), Future(2), Future(3))
-  val numbers2: Future[List[Int]] =
-    Traverse[List].sequence(numbers)
-
   println("─" * x)
-  println(totalUptime)
-  println(Await.result(numbers2, 1.second))
-
-  // doesn't compile, future instances deprecated
-  // Await.result(hostnames.traverse(getUptime), 1.second)
-  // Await.result(numbers.sequence, 1.second)
+  println(testTotalUptime())
   println("─" * x)
