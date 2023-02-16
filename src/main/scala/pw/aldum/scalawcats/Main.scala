@@ -18,6 +18,12 @@ import cats.syntax.traverse.*
   import scalawcats.given
   val x = 75
 
+  val v = Vector(1, 2, 3, 4)
+  object reducer extends Reducable[Int, Int]
+  object stringReducer extends Reducable[Int, String]
+
   println("─" * x)
-  println(testTotalUptime())
+  println(reducer.foldMap(v)(_ + 5))
+  println(reducer.foldMap(v)(i => Math.pow(2.0, i.toDouble).toInt))
+  println(stringReducer.foldMap(v)(_.toString))
   println("─" * x)
