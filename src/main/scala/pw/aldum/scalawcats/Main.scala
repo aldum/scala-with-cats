@@ -1,29 +1,24 @@
 package pw.aldum
 package scalawcats
 
-import scala.concurrent.Future
 import scala.concurrent.Await
-import scala.concurrent.duration.*
+import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-
-import cats.Traverse
-import cats.Applicative
-import cats.instances.list.*
-import cats.instances.future.*
-import cats.syntax.traverse.*
-
-
+import scala.concurrent.duration.*
 
 @main def Main(args: String*): Unit =
   import scalawcats.given
   val x = 75
 
-  val v = Vector(1, 2, 3, 4)
+  val v = Vector.tabulate(100)(identity)
   object reducer extends Reducable[Int, Int]
   object stringReducer extends Reducable[Int, String]
 
+  def fPrintln[A](f: Future[A]): Unit =
+    println(Await.result(f, 1.second))
+
   println("─" * x)
-  println(reducer.foldMap(v)(_ + 5))
-  println(reducer.foldMap(v)(i => Math.pow(2.0, i.toDouble).toInt))
-  println(stringReducer.foldMap(v)(_.toString))
+  fPrintln(reducer.parallelFoldMap(v)(_ + 5))
+  fPrintln(reducer.parallelFoldMap(v.take(20))(i => Math.pow(2.0, i.toDouble).toInt))
+  fPrintln(stringReducer.parallelFoldMap(v)(_.toString))
   println("─" * x)
