@@ -9,6 +9,7 @@ import cats.syntax.foldable.*
 import cats.syntax.traverse.*
 import cats.syntax.semigroup.*
 import cats.syntax.applicative.*      // for pure
+import cats.instances.vector.*        // for Foldable and Traverse
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
@@ -59,4 +60,41 @@ trait Reducible[A, B: Monoid]:
       iterable.foldLeft(Monoid[B].empty)(_ |+| _)
     }
 
+  def parallelFoldMapBookCats
+      (values: Vector[A])
+      (func: A => B)
+      (using ExecutionContext): Future[B] =
+    values
+      .grouped(parN)
+      .toVector
+      .traverse(group => Future(group.toVector.foldMap(func)))
+      .map(_.combineAll)
+
 end Reducible
+
+// TODO how to do this polimorphically?
+trait ParReducable[A, B: Monoid, T[_]: Traverse]:
+
+  // private def fold(seq: Iterable[B]): B =
+  private def fold(seq: Vector[B]): B =
+    val m = summon[Monoid[B]]
+    seq.foldLeft(m.empty)(m.combine)
+
+  // def foldMap(seq: Iterable[A])(f: A => B): B =
+  def foldMap(seq: Vector[A])(f: A => B): B =
+    fold(seq.map(f))
+
+  def parallelFoldMap
+      (values: Vector[A])
+      (f: A => B): T[B] =
+    // def traverse[G[_]: Applicative, A, B](fa: F[A])(f: A => G[B]): G[F[B]]
+    // summon[T].traverse(
+    //   // values.toVector
+    //   ???
+    // )(???)
+
+    // val work = values.grouped(values.size.toInt / parN)
+    // values.grouped(values.size.toInt / parN)
+    //   .toVector
+    //   .traverse(group => ???)
+    ???
