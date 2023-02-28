@@ -20,8 +20,13 @@ final case class CheckF[E: Semigroup, A](func: A => Either[E, A]):
     )
 
 
-sealed trait Check[E, A]:
-  import Check.*
+enum Check[E, A]:
+  case And[E, A](
+    left: Check[E, A],
+    right: Check[E, A]) extends Check[E, A]
+
+  case Pure[E, A](
+    func: A => Either[E, A]) extends Check[E, A]
 
   def and(that: Check[E, A]): Check[E, A] =
     And(this, that)
@@ -37,14 +42,6 @@ sealed trait Check[E, A]:
           case (Left(e),   Right(_))  => e.asLeft
           case (Right(_),  Left(e))   => e.asLeft
           case (Right(_), Right(_)) => a.asRight
-object Check {
-  final case class And[E, A](
-    left: Check[E, A],
-    right: Check[E, A]) extends Check[E, A]
-
-  final case class Pure[E, A](
-    func: A => Either[E, A]) extends Check[E, A]
 
   def pure[E, A](f: A => Either[E, A]): Check[E, A] =
     Pure(f)
-}
