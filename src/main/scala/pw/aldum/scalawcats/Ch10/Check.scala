@@ -26,6 +26,7 @@ enum Check[E, A, B]:
   def apply(in: A)(using Semigroup[E]): Validated[E, B] =
     this match
       case Pure(pred)        => pred(in)
+      case PurePredicate(p)  => p(in)
       case Map(check, f)     => check(in).map(f)
       case FlatMap(check, f) => check(in).withEither(
         _.flatMap(b => f(b)(in).toEither)
@@ -58,6 +59,10 @@ enum Check[E, A, B]:
     that: Check[E, B, C],
   ) extends Check[E, A, C]
 
-  case Pure[E, A](
+  case Pure[E, A, B](
+    func: A => Validated[E, B]
+  ) extends Check[E, A, B]
+
+  case PurePredicate[E, A](
     pred: Predicate[E, A]
   ) extends Check[E, A, A]

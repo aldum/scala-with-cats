@@ -6,6 +6,7 @@ import cats.data.Validated
 import cats.data.Validated.*   // for Valid and Invalid
 import cats.syntax.apply.*     // for mapN
 import cats.syntax.semigroup.* // for |+|
+import cats.syntax.validated.*
 
 enum Predicate[E, A]:
   case Pure[E, A](
@@ -37,3 +38,7 @@ enum Predicate[E, A]:
             right(a) match
               case Valid(_)    => Valid(a)
               case Invalid(e2) => Invalid(e1 |+| e2)
+
+object Predicate:
+  def lift[E, A](err: E, fn: A => Boolean): Predicate[E, A] =
+    Pure(a => if fn(a) then a.valid else err.invalid )
