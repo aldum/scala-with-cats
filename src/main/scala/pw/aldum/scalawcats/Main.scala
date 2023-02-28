@@ -64,8 +64,8 @@ import cats.data.ValidatedNel
   val validateUsername: Kleisli[[B] =>> Result[B], String, String] =
     Kleisli(longerThan(3).run) `andThen` Kleisli(alphanumeric.run)
 
-  val splitEmail: String => Result[(String, String)] =
-    (v: String) =>
+  val splitEmail =
+    check((v: String) =>
       v.split('@') match
         case Array(name, domain) =>
           (name, domain).validNel[String].toEither
@@ -73,18 +73,19 @@ import cats.data.ValidatedNel
           "Must contain a single @ character"
             .invalidNel[(String, String)]
             .toEither
+    )
 
   val checkLeft =
-    Kleisli(longerThan(0).run)
+    checkPred(longerThan(0))
 
   val checkRight =
-    Kleisli((longerThan(3) and contains('.')).run)
+    checkPred(longerThan(3) and contains('.'))
 
-  val joinEmail: ((String, String)) => Result[String] =
-    (l, r) => (checkLeft(l), checkRight(r)).mapN(_ + "@" + _)
+  val joinEmail: Check[(String, String), String] =
+    check((l, r) => (checkLeft(l), checkRight(r)).mapN(_ + "@" + _))
 
   val validateEmail: Kleisli[[B] =>> Either[Errors, B], String, String] =
-    check(splitEmail) `andThen` check(joinEmail)
+    splitEmail `andThen` joinEmail
 
   println("─" * x)
   println(validateUsername("user1"))
