@@ -1,6 +1,7 @@
 package pw.aldum
 package scalawcats
 
+import cats.data.Kleisli
 import cats.data.{ NonEmptyList, Validated }
 import cats.data.Validated.{ Valid, Invalid }
 import cats.syntax.apply.* // for mapN
@@ -10,6 +11,7 @@ import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.*
+import cats.data.ValidatedNel
 
 @main def Main(args: String*): Unit =
   import scalawcats.given
@@ -47,40 +49,54 @@ import scala.concurrent.duration.*
       str => str.filter(c => c == char).size == 1,
     )
 
-  val usernameValid: Check[Errors, String, String] =
-    Check(
-      longerThan(3) and alphanumeric
-    )
+  type Result[A]   = Either[Errors, A]
+  type Check[A, B] = Kleisli[Result, A, B]
 
-  val splitEmail: Check[Errors, String, (String, String)] =
-    Check(_.split('@') match {
-      case Array(name, domain) =>
-        (name, domain).validNel[String]
+  // Create a check from a function:
+  def check[A, B](func: A => Result[B]): Check[A, B] =
+    Kleisli(func)
 
-      case _ =>
-        "Must contain a single @ character".invalidNel[(String, String)]
-    })
+  // Create a check from a Predicate:
+  def checkPred[A](pred: Predicate[Errors, A]): Check[A, A] =
+    Kleisli[Result, A, A](pred.run)
 
-  val checkLeft: Check[Errors, String, String] =
-    Check(longerThan(0))
+  // val validateUsername: Kleisli[[B] =>> Either[Errors, B], String, String] =
+  val validateUsername: Kleisli[[B] =>> Result[B], String, String] =
+    Kleisli(longerThan(3).run) `andThen` Kleisli(alphanumeric.run)
 
-  val checkRight: Check[Errors, String, String] =
-    Check(longerThan(3) and contains('.'))
+  val splitEmail: String => Result[(String, String)] =
+    (v: String) =>
+      v.split('@') match
+        case Array(name, domain) =>
+          (name, domain).validNel[String].toEither
+        case _ =>
+          "Must contain a single @ character"
+            .invalidNel[(String, String)]
+            .toEither
 
-  lazy val joinEmail: Check[Errors, (String, String), String] =
-    Check {
-      case (l, r) =>
-        (checkLeft(l), checkRight(r)).mapN(_ + "@" + _)
-    }
+  val checkLeft =
+    Kleisli(longerThan(0).run)
 
-  def emailValid: Check[Errors, String, String] =
-    splitEmail andThen joinEmail
+  val checkRight =
+    Kleisli((longerThan(3) and contains('.')).run)
+
+  val joinEmail: ((String, String)) => Result[String] =
+    (l, r) => (checkLeft(l), checkRight(r)).mapN(_ + "@" + _)
+
+  val validateEmail: Kleisli[[B] =>> Either[Errors, B], String, String] =
+    check(splitEmail) `andThen` check(joinEmail)
 
   println("─" * x)
-  println(usernameValid("user1"))
-  println(usernameValid("u"))
-  println(usernameValid("u_"))
-  println(usernameValid("user_@"))
+  println(validateUsername("user1"))
+  println(validateUsername("u"))
+  println(validateUsername("u_"))
+  println(validateUsername("user_@"))
+  println(validateEmail("email"))
+  println(validateEmail("user_@"))
+  println(validateEmail("u@a"))
+  println(validateEmail("u@a.a"))
+  println(validateEmail("user@abc"))
+  println(validateEmail("user@dom.at"))
   println("─" * x)
 
 end Main
