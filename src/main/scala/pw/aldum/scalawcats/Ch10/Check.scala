@@ -7,6 +7,7 @@ import cats.syntax.apply.*   // for mapN
 import cats.syntax.semigroup.* // for |+|
 import cats.syntax.either.*
 import cats.data.Validated
+import cats.data.Validated.*
 
 final case class CheckF[E: Semigroup, A](func: A => Either[E, A]):
   def apply(a: A): Either[E, A] =
@@ -47,9 +48,12 @@ enum Check[E, A]:
       case And(left, right) =>
         (left(a), right(a)).mapN((_, _) => a)
       case Or(left, right) =>
-        val l = left(a)
-        val r = right(a)
-        if l.isValid then l else r
+        left(a) match
+          case Valid(a)    => Valid(a)
+          case Invalid(e1) =>
+            right(a) match
+              case Valid(a)    => Valid(a)
+              case Invalid(e2) => Invalid(e1 |+| e2)
 
 
   def pure[E, A](f: A => Validated[E, A]): Check[E, A] =
