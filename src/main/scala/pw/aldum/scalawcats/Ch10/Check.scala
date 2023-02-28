@@ -21,24 +21,36 @@ final case class CheckF[E: Semigroup, A](func: A => Either[E, A]):
         case (Right(_), Left(e2)) => e2.asLeft
     )
 
+
 enum Check[E, A]:
+  case Pure[E, A](
+    func: A => Validated[E, A]) extends Check[E, A]
+
   case And[E, A](
     left: Check[E, A],
     right: Check[E, A]) extends Check[E, A]
 
-  case Pure[E, A](
-    func: A => Validated[E, A]) extends Check[E, A]
+  case Or[E, A](
+    left: Check[E, A],
+    right: Check[E, A]) extends Check[E, A]
 
-  def and(that: Check[E, A]): Check[E, A] =
+  infix def and(that: Check[E, A]): Check[E, A] =
     And(this, that)
+
+  infix def or(that: Check[E, A]): Check[E, A] =
+    Or(this, that)
 
   def apply(a: A)(implicit s: Semigroup[E]): Validated[E, A] =
     this match
       case Pure(func) =>
         func(a)
-
       case And(left, right) =>
         (left(a), right(a)).mapN((_, _) => a)
+      case Or(left, right) =>
+        val l = left(a)
+        val r = right(a)
+        if l.isValid then l else r
+
 
   def pure[E, A](f: A => Validated[E, A]): Check[E, A] =
     Pure(f)
