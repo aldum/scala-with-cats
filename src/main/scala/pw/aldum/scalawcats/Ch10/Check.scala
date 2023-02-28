@@ -2,38 +2,26 @@ package pw.aldum
 package scalawcats
 
 import cats.Semigroup
-import cats.instances.list.* // for Semigroup
-import cats.syntax.apply.*   // for mapN
+import cats.instances.list.*   // for Semigroup
+import cats.syntax.apply.*     // for mapN
 import cats.syntax.semigroup.* // for |+|
-import cats.syntax.either.*
 import cats.data.Validated
-import cats.data.Validated.{Valid, Invalid}
-
-final case class CheckF[E: Semigroup, A](func: A => Either[E, A]):
-  def apply(a: A): Either[E, A] =
-    func(a)
-
-  infix def and(that: CheckF[E, A]): CheckF[E, A] =
-    CheckF((a: A) =>
-      (this(a), that(a)) match
-        case (Right(a), Right(_)) => a.asRight
-        case (Left(e1), Left(e2)) => Left(e1 |+| e2)
-        case (Left(e1), Right(_)) => e1.asLeft
-        case (Right(_), Left(e2)) => e2.asLeft
-    )
+import cats.data.Validated.{ Valid, Invalid }
 
 enum Check[E, A, B]:
   def apply(in: A)(using Semigroup[E]): Validated[E, B] =
     this match
-      case Pure(pred)        => pred(in)
-      case PurePredicate(p)  => p(in)
-      case Map(check, f)     => check(in).map(f)
-      case FlatMap(check, f) => check(in).withEither(
-        _.flatMap(b => f(b)(in).toEither)
-      )
-      case AndThen(ch, that) => ch(in).withEither(
-        _.flatMap(b => that(b).toEither)
-      )
+      case Pure(f)          => f(in)
+      case PurePredicate(p) => p(in)
+      case Map(check, f)    => check(in).map(f)
+      case FlatMap(check, f) =>
+        check(in).withEither(
+          _.flatMap(b => f(b)(in).toEither)
+        )
+      case AndThen(ch, that) =>
+        ch(in).withEither(
+          _.flatMap(b => that(b).toEither)
+        )
 
   infix def map[C](f: B => C): Check[E, A, C] =
     Map[E, A, B, C](this, f)
@@ -45,24 +33,31 @@ enum Check[E, A, B]:
     AndThen[E, A, B, C](this, that)
 
   case Map[E, A, B, C](
-    check: Check[E, A, B],
-    f: B => C
-  ) extends Check[E, A, C]
+      check: Check[E, A, B],
+      f: B => C,
+    ) extends Check[E, A, C]
 
   case FlatMap[E, A, B, C](
-    check: Check[E, A, B],
-    f: B => Check[E, A, C]
-  ) extends Check[E, A, C]
+      check: Check[E, A, B],
+      f: B => Check[E, A, C],
+    ) extends Check[E, A, C]
 
   case AndThen[E, A, B, C](
-    check: Check[E, A, B],
-    that: Check[E, B, C],
-  ) extends Check[E, A, C]
+      check: Check[E, A, B],
+      that: Check[E, B, C],
+    ) extends Check[E, A, C]
 
   case Pure[E, A, B](
-    func: A => Validated[E, B]
-  ) extends Check[E, A, B]
+      func: A => Validated[E, B]
+    ) extends Check[E, A, B]
 
   case PurePredicate[E, A](
-    pred: Predicate[E, A]
-  ) extends Check[E, A, A]
+      pred: Predicate[E, A]
+    ) extends Check[E, A, A]
+
+object Check:
+  def apply[E, A, B](f: A => Validated[E, B]): Check[E, A, B] =
+    Pure(f)
+
+  def apply[E, A](pred: Predicate[E, A]): Check[E, A, A] =
+    PurePredicate(pred)

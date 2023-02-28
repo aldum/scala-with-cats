@@ -1,9 +1,10 @@
 package pw.aldum
 package scalawcats
 
-import cats.syntax.either.*
 import cats.data.{ NonEmptyList, Validated }
 import cats.data.Validated.{ Valid, Invalid }
+import cats.syntax.apply.* // for mapN
+import cats.syntax.validated.catsSyntaxValidatedId
 
 import scala.concurrent.Await
 import scala.concurrent.Future
@@ -25,7 +26,7 @@ import scala.concurrent.duration.*
   def longerThan(n: Int): Predicate[Errors, String] =
     Predicate.lift(
       error(s"Must be longer than $n characters"),
-      str => str.size > n,
+      str => str.length > n,
     )
 
   val alphanumeric: Predicate[Errors, String] =
@@ -47,23 +48,33 @@ import scala.concurrent.duration.*
     )
 
   val usernameValid: Check[Errors, String, String] =
-    Check.PurePredicate(
-      longerThan(4) and alphanumeric
+    Check(
+      longerThan(3) and alphanumeric
     )
 
+  val splitEmail: Check[Errors, String, (String, String)] =
+    Check(_.split('@') match {
+      case Array(name, domain) =>
+        (name, domain).validNel[String]
+
+      case _ =>
+        "Must contain a single @ character".invalidNel[(String, String)]
+    })
+
+  val checkLeft: Check[Errors, String, String] =
+    Check(longerThan(0))
+
+  val checkRight: Check[Errors, String, String] =
+    Check(longerThan(3) and contains('.'))
+
+  lazy val joinEmail: Check[Errors, (String, String), String] =
+    Check {
+      case (l, r) =>
+        (checkLeft(l), checkRight(r)).mapN(_ + "@" + _)
+    }
+
   def emailValid: Check[Errors, String, String] =
-    val validateAroundAt: Predicate[Errors, String] =
-      Predicate.lift(
-        error("e"),
-        s =>
-          val Array(user, domain) = s.split('@')
-          val v = longerThan(0)(user) `combine`
-            longerThan(2)(domain) `combine`
-            containsOnce('.')(domain)
-          v.isValid,
-      )
-    Check.PurePredicate(containsOnce('@')) andThen
-      Check.PurePredicate(validateAroundAt)
+    splitEmail andThen joinEmail
 
   println("─" * x)
   println(usernameValid("user1"))
