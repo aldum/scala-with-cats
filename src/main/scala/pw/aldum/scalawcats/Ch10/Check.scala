@@ -30,12 +30,17 @@ enum Check[E, A, B]:
       case FlatMap(check, f) => check(in).withEither(
         e => e.flatMap(b => f(b)(in).toEither)
       )
+      case AndThen(ch, that) =>
+        ch.andThen(that).apply(in)
 
   def map[C](f: B => C): Check[E, A, C] =
     Map[E, A, B, C](this, f)
 
   def flatMap[C](in: A)(f: B => Check[E, A, C]): Check[E, A, C] =
     FlatMap[E, A, B, C](this, f)
+
+  def andThen[C](that: Check[E, B, C]): Check[E, A, C] =
+    AndThen[E, A, B, C](this, that)
 
   case Map[E, A, B, C](
     check: Check[E, A, B],
@@ -45,6 +50,11 @@ enum Check[E, A, B]:
   case FlatMap[E, A, B, C](
     check: Check[E, A, B],
     f: B => Check[E, A, C]
+  ) extends Check[E, A, C]
+
+  case AndThen[E, A, B, C](
+    check: Check[E, A, B],
+    that: Check[E, B, C],
   ) extends Check[E, A, C]
 
   case Pure[E, A](
