@@ -7,7 +7,7 @@ import cats.syntax.apply.*   // for mapN
 import cats.syntax.semigroup.* // for |+|
 import cats.syntax.either.*
 import cats.data.Validated
-import cats.data.Validated.*
+import cats.data.Validated.{Valid, Invalid}
 
 final case class CheckF[E: Semigroup, A](func: A => Either[E, A]):
   def apply(a: A): Either[E, A] =
@@ -23,8 +23,24 @@ final case class CheckF[E: Semigroup, A](func: A => Either[E, A]):
     )
 
 sealed trait Check[E, A, B]:
-  def apply(a: A): Validated[E, B] =
-    ???
+  import Check.*
+  def apply(a: A)(using Semigroup[E]): Validated[E, B]
+  def map[C](f: B => C): Check[E, A, C] =
+    Map[E, A, B, C](this, f)
 
-  def map[C](func: B => C): Check[E, A, C] =
-    ???
+object Check:
+  final case class Map[E, A, B, C](
+    check: Check[E, A, B],
+    f: B => C
+  ) extends Check[E, A, C]:
+    def apply(in: A)(using Semigroup[E]): Validated[E, C] =
+      check(in).map(f)
+
+  final case class Pure[E, A](
+    pred: Predicate[E, A]
+  ) extends Check[E, A, A]:
+    def apply(in: A)(using Semigroup[E]): Validated[E, A] =
+      pred(in)
+
+  def apply[E, A](pred: Predicate[E, A]): Check[E, A, A] =
+    Pure(pred)
