@@ -16,27 +16,38 @@ import scala.concurrent.duration.*
     println(Await.result(f, 1.second))
   val x = 75
 
-  val a: Check[List[String], Int, Int] =
+  def lenCheck(l: Int): Check[List[String], String, String] =
     Check.Pure(
-      Predicate.Pure[List[String], Int](v =>
-        if v > 2 then Valid(v)
-        else Invalid(List("Must be > 2"))
+      Predicate.Pure(v =>
+        if v.size >= l then Valid(v)
+        else Invalid(List(s"Must be at least $l long"))
+      )
+    )
+  val alnum: Check[List[String], String, String] =
+    Check.Pure(
+      Predicate.Pure(v =>
+        if v.forall(_.isLetterOrDigit) then Valid(v)
+        else Invalid(List("Must be alphanumeric"))
       )
     )
 
-  val b: Check[List[String], Int, Int] =
+  val usernameValid: Check[List[String], String, String] =
+    lenCheck(4) andThen alnum
+
+  def hasChar(c: Char): Check[List[String], String, String] =
     Check.Pure(
-      Predicate.Pure[List[String], Int](v =>
-        if v % 2 == 0 then Valid(v)
-        else Invalid(List("Must be even"))
+      Predicate.Pure(v =>
+        if v.contains(c) then Valid(v)
+        else Invalid(List(s"Must contain $c"))
       )
     )
 
-  val check: Check[List[String], Int, Int] =
-    a andThen b
+  val emailValid: Check[List[String], String, String] =
+    hasChar('@')
+
 
   println("─" * x)
-  println(check(5))
-  println(check(4))
-  println(check(1))
+  println(usernameValid("user1"))
+  println(usernameValid("u"))
+  println(usernameValid("user_@"))
   println("─" * x)
