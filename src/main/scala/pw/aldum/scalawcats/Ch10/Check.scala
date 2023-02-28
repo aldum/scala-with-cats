@@ -22,25 +22,20 @@ final case class CheckF[E: Semigroup, A](func: A => Either[E, A]):
         case (Right(_), Left(e2)) => e2.asLeft
     )
 
-sealed trait Check[E, A, B]:
-  import Check.*
-  def apply(a: A)(using Semigroup[E]): Validated[E, B]
+enum Check[E, A, B]:
+  def apply(in: A)(using Semigroup[E]): Validated[E, B] =
+    this match
+      case Map(check, f) => check(in).map(f)
+      case Pure(pred)    => pred(in)
+
   def map[C](f: B => C): Check[E, A, C] =
     Map[E, A, B, C](this, f)
 
-object Check:
-  final case class Map[E, A, B, C](
+  case Map[E, A, B, C](
     check: Check[E, A, B],
     f: B => C
-  ) extends Check[E, A, C]:
-    def apply(in: A)(using Semigroup[E]): Validated[E, C] =
-      check(in).map(f)
+  ) extends Check[E, A, C]
 
-  final case class Pure[E, A](
+  case Pure[E, A](
     pred: Predicate[E, A]
-  ) extends Check[E, A, A]:
-    def apply(in: A)(using Semigroup[E]): Validated[E, A] =
-      pred(in)
-
-  def apply[E, A](pred: Predicate[E, A]): Check[E, A, A] =
-    Pure(pred)
+  ) extends Check[E, A, A]
