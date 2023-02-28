@@ -25,15 +25,26 @@ final case class CheckF[E: Semigroup, A](func: A => Either[E, A]):
 enum Check[E, A, B]:
   def apply(in: A)(using Semigroup[E]): Validated[E, B] =
     this match
-      case Map(check, f) => check(in).map(f)
-      case Pure(pred)    => pred(in)
+      case Pure(pred)        => pred(in)
+      case Map(check, f)     => check(in).map(f)
+      case FlatMap(check, f) => check(in).withEither(
+        e => e.flatMap(b => f(b)(in).toEither)
+      )
 
   def map[C](f: B => C): Check[E, A, C] =
     Map[E, A, B, C](this, f)
 
+  def flatMap[C](in: A)(f: B => Check[E, A, C]): Check[E, A, C] =
+    FlatMap[E, A, B, C](this, f)
+
   case Map[E, A, B, C](
     check: Check[E, A, B],
     f: B => C
+  ) extends Check[E, A, C]
+
+  case FlatMap[E, A, B, C](
+    check: Check[E, A, B],
+    f: B => Check[E, A, C]
   ) extends Check[E, A, C]
 
   case Pure[E, A](
