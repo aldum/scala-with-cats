@@ -32,3 +32,19 @@ object GCounter:
       override def total(f: Map[K, V])
                         (using m: CommutativeMonoid[V]): V =
         f.values.toList.combineAll
+
+  implicit def gcounterInstance[F[_,_], K, V]
+      (implicit kvs: KeyValueStore[F],
+                km: CommutativeMonoid[F[K, V]]): GCounter[F, K, V] =
+    new GCounter[F, K, V]:
+      def increment(f: F[K, V])(key: K, value: V)
+            (implicit m: CommutativeMonoid[V]): F[K, V] =
+        val total = f.getOrElse(key, m.empty) |+| value
+        f.put(key, total)
+
+      def merge(f1: F[K, V], f2: F[K, V])
+            (implicit b: BoundedSemiLattice[V]): F[K, V] =
+        f1 |+| f2
+
+      def total(f: F[K, V])(implicit m: CommutativeMonoid[V]): V =
+        f.values.combineAll
