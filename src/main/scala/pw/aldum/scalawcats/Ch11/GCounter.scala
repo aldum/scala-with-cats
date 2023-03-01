@@ -17,18 +17,18 @@ object GCounter:
   def apply[F[_, _], K, V](using counter: GCounter[F, K, V]) =
     counter
 
-given GCM[K, V]: GCounter[Map, K, V] =
-  new GCounter[Map, K, V]:
-    override def increment(f: Map[K, V])
-                          (k: K, v: V)
-                          (using m: CommutativeMonoid[V]): Map[K, V] =
-      val value = v |+| f.getOrElse(k, m.empty)
-      f.updated(k, value)
+  given GCM[K, V]: GCounter[Map, K, V] =
+    new GCounter[Map, K, V]:
+      override def increment(f: Map[K, V])
+                            (k: K, v: V)
+                            (using m: CommutativeMonoid[V]): Map[K, V] =
+        val value = v |+| f.getOrElse(k, m.empty)
+        f.updated(k, value)
 
-    override def merge(f1: Map[K, V], f2: Map[K, V])
-                      (using b: BoundedSemiLattice[V]): Map[K, V] =
-      f1 |+| f2
+      override def merge(f1: Map[K, V], f2: Map[K, V])
+                        (using b: BoundedSemiLattice[V]): Map[K, V] =
+        f1 |+| f2
 
-    override def total(f: Map[K, V])
-                      (using m: CommutativeMonoid[V]): V =
-      f.values.toList.combineAll
+      override def total(f: Map[K, V])
+                        (using m: CommutativeMonoid[V]): V =
+        f.values.toList.combineAll
