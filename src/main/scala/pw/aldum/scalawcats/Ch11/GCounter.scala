@@ -1,21 +1,23 @@
 package pw.aldum
 package scalawcats
 
-final case class GCounter(counters: Map[String, Int]):
-  def increment(machine: String, amount: Int) =
-    val current = counters.getOrElse(machine, 0)
-    GCounter(counters.updated(machine, current + amount))
+import cats.syntax.monoid.*
 
-  infix def merge(that: GCounter): GCounter =
-    val (present, missing) = that.counters.partition(
-      (m, _) => counters.contains(m)
+final case class GCounter[V](counters: Map[String, V])(using bsl: BoundedSemiLattice[V]):
+  def increment(machine: String, amount: V) =
+    val value = bsl.combine(
+      counters.getOrElse(machine, bsl.empty),
+      amount,
     )
-    val merged = (counters ++ missing).collect{
+    GCounter(counters.updated(machine, value))
+
+  infix def merge(that: GCounter[V]): GCounter[V] =
+    val merged = that.counters ++ counters.map {
       case (m, a) =>
-        m -> (a max present.getOrElse(m, 0))
+        m -> bsl.combine(a, that.counters.getOrElse(m, bsl.empty))
     }
 
     GCounter(merged)
 
-  def total: Int =
-    counters.values.sum
+  def total: V =
+    counters.values.fold(bsl.empty)(bsl.combine)
