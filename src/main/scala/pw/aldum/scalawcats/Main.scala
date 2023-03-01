@@ -1,17 +1,12 @@
 package pw.aldum
 package scalawcats
 
-import cats.data.Kleisli
-import cats.data.{ NonEmptyList, Validated }
-import cats.data.Validated.{ Valid, Invalid }
-import cats.syntax.apply.* // for mapN
-import cats.syntax.validated.catsSyntaxValidatedId
+import cats.instances.int.* // for Monoid
 
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.*
-import cats.data.ValidatedNel
 
 @main def Main(args: String*): Unit =
   import scalawcats.given
@@ -20,84 +15,19 @@ import cats.data.ValidatedNel
     println(Await.result(f, 1.second))
   val x = 75
 
-  type Errors = NonEmptyList[String]
+  val g1 = Map("a" -> 7, "b" -> 3)
+  val g2 = Map("a" -> 2, "b" -> 5)
 
-  def error(s: String): NonEmptyList[String] =
-    NonEmptyList(s, Nil)
+  val counter = GCounter[Map, String, Int]
 
-  def longerThan(n: Int): Predicate[Errors, String] =
-    Predicate.lift(
-      error(s"Must be longer than $n characters"),
-      str => str.length > n,
-    )
-
-  val alphanumeric: Predicate[Errors, String] =
-    Predicate.lift(
-      error(s"Must be all alphanumeric characters"),
-      str => str.forall(_.isLetterOrDigit),
-    )
-
-  def contains(char: Char): Predicate[Errors, String] =
-    Predicate.lift(
-      error(s"Must contain the character $char"),
-      str => str.contains(char),
-    )
-
-  def containsOnce(char: Char): Predicate[Errors, String] =
-    Predicate.lift(
-      error(s"Must contain the character $char only once"),
-      str => str.filter(c => c == char).size == 1,
-    )
-
-  type Result[A]   = Either[Errors, A]
-  type Check[A, B] = Kleisli[Result, A, B]
-
-  // Create a check from a function:
-  def check[A, B](func: A => Result[B]): Check[A, B] =
-    Kleisli(func)
-
-  // Create a check from a Predicate:
-  def checkPred[A](pred: Predicate[Errors, A]): Check[A, A] =
-    Kleisli[Result, A, A](pred.run)
-
-  // val validateUsername: Kleisli[[B] =>> Either[Errors, B], String, String] =
-  val validateUsername: Kleisli[[B] =>> Result[B], String, String] =
-    Kleisli(longerThan(3).run) `andThen` Kleisli(alphanumeric.run)
-
-  val splitEmail =
-    check((v: String) =>
-      v.split('@') match
-        case Array(name, domain) =>
-          (name, domain).validNel[String].toEither
-        case _ =>
-          "Must contain a single @ character"
-            .invalidNel[(String, String)]
-            .toEither
-    )
-
-  val checkLeft =
-    checkPred(longerThan(0))
-
-  val checkRight =
-    checkPred(longerThan(3) and contains('.'))
-
-  val joinEmail: Check[(String, String), String] =
-    check((l, r) => (checkLeft(l), checkRight(r)).mapN(_ + "@" + _))
-
-  val validateEmail: Kleisli[[B] =>> Either[Errors, B], String, String] =
-    splitEmail `andThen` joinEmail
+  val merged = counter.merge(g1, g2)
+  // merged: Map[String, Int] = Map("a" -> 7, "b" -> 5)
+  val total  = counter.total(merged)
+  // total: Int = 12
 
   println("─" * x)
-  println(validateUsername("user1"))
-  println(validateUsername("u"))
-  println(validateUsername("u_"))
-  println(validateUsername("user_@"))
-  println(validateEmail("email"))
-  println(validateEmail("user_@"))
-  println(validateEmail("u@a"))
-  println(validateEmail("u@a.a"))
-  println(validateEmail("user@abc"))
-  println(validateEmail("user@dom.at"))
+  println(merged)
+  println(total) // actually 7
   println("─" * x)
 
 end Main
